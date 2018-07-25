@@ -86,6 +86,9 @@ class Pong {
             this.ball.vel.y = -this.ball.vel.y;
         }
 
+        this.players.forEach(player => {
+            this.collide(player, this.ball);
+        });
         this.render();
     }
 
@@ -103,15 +106,20 @@ class Pong {
     
     }
 
+    collide(player, ball) {
+        if (player.left < ball.right && player.right > ball.left &&
+            player.top < ball.bottom && player.bottom > ball.top) {
+                ball.vel.x = -ball.vel.x * 1.05; // to slowly speed up the ball
+            }
+    }
 }   
 
 const canvas = document.getElementById('pong');
 const pong = new Pong(canvas);
 
 function positionCheck(position, number) {
-
-    if (pong.players[0].top == 0 && number == -10) {
-        console.log('test');
+    console.log(pong.players[0].top);
+    if (pong.players[0].top <= 0 && number == -10 || pong.players[0].bottom >= canvas.height && number == 10) {
         return;
     }
     return pong.players[0].pos.y += number;
@@ -123,7 +131,6 @@ window.addEventListener('keydown', event => {
     a.push(event.keyCode);
     a.forEach(key => {
         if (a == 38) {
-            console.log('hi');
             positionCheck(pong.players[0].pos.y, -10);
         }
         if (a == 40) {
