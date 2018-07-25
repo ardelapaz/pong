@@ -36,6 +36,7 @@ class Player extends Rect {
     constructor(){
     super (10, 75)
     this.score = 0;
+    this.vel = new Vec;
     }
 }
 
@@ -79,12 +80,20 @@ class Pong {
         this.ball.pos.x += this.ball.vel.x * dt;
         this.ball.pos.y += this.ball.vel.y * dt;
 
-        if (this.ball.left < 0 || this.ball.right > this._canvas.width) {
-            this.ball.vel.x = -this.ball.vel.x;
-        }
         if (this.ball.top < 0 || this.ball.bottom > this._canvas.height) {
             this.ball.vel.y = -this.ball.vel.y;
         }
+
+        this.hasScored();
+
+        // all of this is to control the ball's position on the screen (to make sure it doesn't go off screen). Will be implemented officially with the ai implementation.
+        if (this.players[1].top < this._canvas.height / 2) {
+            this.players[1].vel.y = -10;
+        } else {
+            this.players[1].vel.y = 10;
+        }
+        this.positionCheck(this.players[1], this.players[1].pos.y, this.players[1].vel.y);
+
 
         this.players.forEach(player => {
             this.collide(player, this.ball);
@@ -112,17 +121,92 @@ class Pong {
                 ball.vel.x = -ball.vel.x * 1.05; // to slowly speed up the ball
             }
     }
+
+    hasScored() {
+        if (this.ball.right > this._canvas.width) {
+            this.players[0].score = this.players[0].score + 1;
+            this.reset();
+            this.play(1);
+        }
+        if (this.ball.left < 0) {
+            this.players[1].score = this.players[1].score + 1;
+            this.reset();
+            this.play(-1);
+        }
+}
+
+    reset() {
+        const b = this.ball;
+        b.vel.x = 0;
+        b.vel.y = 0;
+        b.pos.x = this._canvas.width / 2;
+        b.pos.y = this._canvas.height / 2;
+    }
+
+    play(advantage) {
+        // Player who scored last gets kickoff advantage
+        this.ball.vel.x = 150 * advantage;
+        this.ball.vel.y = 150 * advantage;
+
+    }
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+
+    positionCheck(player, position, velocity) { // this is temporary for the ai to be in the play boundary
+        console.log(velocity)
+        if (player.top <= 0 && velocity == -10 && this.ball.vel.y < 0 || player.bottom >= canvas.height && velocity == 10 && this.ball.vel.y > 0) {
+            return;
+        }
+        this.players[1].pos.y = this.ball.pos.y;
+    }    
 }   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const canvas = document.getElementById('pong');
 const pong = new Pong(canvas);
 
-function positionCheck(position, number) {
-    console.log(pong.players[0].top);
-    if (pong.players[0].top <= 0 && number == -10 || pong.players[0].bottom >= canvas.height && number == 10) {
+function positionCheck(player, position, velocity) {
+    if (player.top <= 0 && velocity == -10 || player.bottom >= canvas.height && velocity == 10) {
         return;
     }
-    return pong.players[0].pos.y += number;
+    return player.pos.y += velocity;
 }
 
 window.addEventListener('keydown', event => {
@@ -131,10 +215,12 @@ window.addEventListener('keydown', event => {
     a.push(event.keyCode);
     a.forEach(key => {
         if (a == 38) {
-            positionCheck(pong.players[0].pos.y, -10);
+            pong.players[0].vel.y = -10;
+            positionCheck(pong.players[0], pong.players[0].pos.y, pong.players[0].vel.y);
         }
         if (a == 40) {
-            positionCheck(pong.players[0].pos.y, 10);
+            pong.players[0].vel.y = 10;
+            positionCheck(pong.players[0], pong.players[0].pos.y, pong.players[0].vel.y);
         }
     });
 });
