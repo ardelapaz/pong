@@ -46,24 +46,13 @@ class Pong {
         this._context = canvas.getContext('2d');
 
         this.ball = new Ball();
-        console.log(this.ball);
-
-        this.ball.pos.x = 100;
-        this.ball.pos.y = 50;
-        
-        this.ball.vel.x = 150;
-        this.ball.vel.y = 150;
 
         this.players = [
             new Player(),
             new Player(),
         ];
 
-        this.players[0].pos.x = 50;
-        this.players[1].pos.x = this._canvas.width - 50;
-        this.players.forEach(player => {
-            player.pos.y = this._canvas.height / 2 
-        });
+        this.reset();
 
         let lastTime = null;
         this.callback = (millis) => {
@@ -85,21 +74,21 @@ class Pong {
         }
 
         this.hasScored();
-
-        // all of this is to control the ball's position on the screen (to make sure it doesn't go off screen). Will be implemented officially with the ai implementation.
-        if (this.players[1].top < this._canvas.height / 2) {
-            this.players[1].vel.y = -10;
-        } else {
-            this.players[1].vel.y = 10;
-        }
-        this.positionCheck(this.players[1], this.players[1].pos.y, this.players[1].vel.y);
-
-
+        this.aiLogic();  
+        this.positionCheck(this.players[1], this.players[1].vel.y);
+        this.isKeyPressed();
         this.players.forEach(player => {
             this.collide(player, this.ball);
         });
         this.render();
     }
+
+
+
+
+    //
+    // All functions are listed below
+    //
 
     drawRect(rect) {
         this._context.fillStyle = '#fff';
@@ -118,7 +107,7 @@ class Pong {
     collide(player, ball) {
         if (player.left < ball.right && player.right > ball.left &&
             player.top < ball.bottom && player.bottom > ball.top) {
-                ball.vel.x = -ball.vel.x * 1.05; // to slowly speed up the ball
+                ball.vel.x = -ball.vel.x * 1.10; // to slowly speed up the ball
             }
     }
 
@@ -133,94 +122,74 @@ class Pong {
             this.reset();
             this.play(-1);
         }
-}
+    }   
 
     reset() {
         const b = this.ball;
-        b.vel.x = 0;
-        b.vel.y = 0;
+        b.vel.x = 100;
+        b.vel.y = 100;
         b.pos.x = this._canvas.width / 2;
         b.pos.y = this._canvas.height / 2;
+
+        const p = this.players[0];
+        p.pos.x = 50;
+        p.pos.y = p.pos.y = this._canvas.height / 2;
+        
+        const a = this.players[1];
+        a.pos.x = this._canvas.width - 50
+        a.pos.y = p.pos.y = this._canvas.height / 2;
     }
 
     play(advantage) {
         // Player who scored last gets kickoff advantage
-        this.ball.vel.x = 150 * advantage;
-        this.ball.vel.y = 150 * advantage;
+        this.ball.vel.x = 100 * advantage;
+        this.ball.vel.y = 100 * advantage;
 
     }
-    //
-    //
-    //
-    //
-    //
-    //
-    //
 
-    positionCheck(player, position, velocity) { // this is temporary for the ai to be in the play boundary
-        console.log(velocity)
-        if (player.top <= 0 && velocity == -10 && this.ball.vel.y < 0 || player.bottom >= canvas.height && velocity == 10 && this.ball.vel.y > 0) {
+    positionCheck(player, velocity) {
+        console.log(player);
+        if (player.bottom >= 400 && velocity >= 0 || player.top <= 0 && velocity <= 0) {
             return;
         }
-        this.players[1].pos.y = this.ball.pos.y;
+        if (player.bottom >= 400 && velocity == 3 || player.top <= 0 && velocity == -3) {
+            return;
+        }
+        player.pos.y += velocity;
     }    
+
+    isKeyPressed() {
+        if (keyState[38]) {
+            this.players[0].vel.y = -3;
+        } else if (keyState[40]) {
+            this.players[0].vel.y = 3;
+        } else {
+            this.players[0].vel.y = 0;
+        }
+        this.positionCheck(this.players[0], this.players[0].vel.y);
+    }
+
+    aiLogic() {
+        if (this.players[1].bottom - this.ball.bottom < 50 && this.players[1].bottom - this.ball.bottom > 0) {
+            this.players[1].vel.y = 1.5;
+        } else {
+            this.players[1].vel.y = -1.5;
+        }
+    }
 }   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
 const canvas = document.getElementById('pong');
 const pong = new Pong(canvas);
 
-function positionCheck(player, position, velocity) {
-    if (player.top <= 0 && velocity == -10 || player.bottom >= canvas.height && velocity == 10) {
-        return;
-    }
-    return player.pos.y += velocity;
-}
 
-window.addEventListener('keydown', event => {
-// Replace key with whatever key, multiple functions for checking what key is which. Still have to make ai too :( 
-    var a = [];
-    a.push(event.keyCode);
-    a.forEach(key => {
-        if (a == 38) {
-            pong.players[0].vel.y = -10;
-            positionCheck(pong.players[0], pong.players[0].pos.y, pong.players[0].vel.y);
-        }
-        if (a == 40) {
-            pong.players[0].vel.y = 10;
-            positionCheck(pong.players[0], pong.players[0].pos.y, pong.players[0].vel.y);
-        }
-    });
-});
+// Pulled off of stack overflow to track keypresses, very useful :)
+
+var keyState = {};    
+window.addEventListener('keydown',function(e){
+    keyState[e.keyCode || e.which] = true;
+},true);    
+window.addEventListener('keyup',function(e){
+    keyState[e.keyCode || e.which] = false;
+},true);
