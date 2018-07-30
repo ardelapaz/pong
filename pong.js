@@ -63,34 +63,7 @@ class Pong {
             requestAnimationFrame(this.callback);
         };
         requestAnimationFrame(this.callback);
-
-        this.CHAR_PIXEL = 10;
-        this.CHARS = [
-            '111101101101111',
-            '010010010010010',
-            '111001111100111',
-            '111001111001111',
-            '101101111001001',
-            '111100111001111',
-            '111100111101111',
-            '111001001001001',
-            '111101111101111',
-            '111101111001111',
-        ].map(str => {
-            const canvas = document.createElement('canvas');
-            const s = this.CHAR_PIXEL;
-            canvas.height = s * 5;
-            canvas.width = s * 3;
-            const context = canvas.getContext('2d');
-            context.fillStyle = '#fff';
-            str.split('').forEach((fill, i) => {
-                if (fill === '1') {
-                    context.fillRect((i % 3) * s, (i / 3 | 0) * s, s, s);
-                }
-            });
-            return canvas;
-        });
-     }
+      }
 
 
      
@@ -110,7 +83,12 @@ class Pong {
         this.players.forEach(player => {
             this.collide(player, this.ball);
         });
+
+        if (this.players[1].score == 1) {
+            this.endGame();
+        } else {
         this.render();
+        }
     }
 
 
@@ -145,14 +123,21 @@ class Pong {
     hasScored() {
         if (this.ball.right > this._canvas.width) {
             this.players[0].score = this.players[0].score + 1;
+            if (this.players[0].score == 1) {
+                this.endGame();
+            }
             this.reset();
             this.play(1);
         }
         if (this.ball.left < 0) {
             this.players[1].score = this.players[1].score + 1;
+            if (this.players[0].score == 1) {
+                this.endGame();
+            }
             this.reset();
             this.play(-1);
         }
+
     }   
 
     reset() {
@@ -208,17 +193,23 @@ class Pong {
             this.players[1].vel.y = -1.5;
         }
     }
-    drawScore()
-    {
-        const align = this._canvas.width / 3;
-        const cw = this.CHAR_PIXEL * 4;
-        this.players.forEach((player, index) => {
-            const chars = player.score.toString().split('');
-            const offset = align * (index + 1) - (cw * chars.length / 2) + this.CHAR_PIXEL / 2;
-            chars.forEach((char, pos) => {
-                this._context.drawImage(this.CHARS[char|0], offset + pos * cw, 20);
-            });
-        });
+
+    drawScore() {
+        this._context.font = "30px Arial";
+        this._context.fillStyle = "#FFFFFF";
+        this._context.fillText(this.players[0].score, 200, 50);
+
+        this._context.font = "30px Arial";
+        this._context.fillStyle = "#FFFFFF";
+        this._context.fillText(this.players[1].score, (this._canvas.width - 200), 50);
+    }
+
+    endGame() {
+        console.log('test');
+        window.stop();
+        this._context.font = "30px Arial";
+        this._context.fillStyle = "#FFFFFF";
+        this._context.fillText("Game Over! \n Refresh to play again!", 300, 300);
     }
     
 }   
