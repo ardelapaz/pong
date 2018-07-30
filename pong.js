@@ -63,7 +63,37 @@ class Pong {
             requestAnimationFrame(this.callback);
         };
         requestAnimationFrame(this.callback);
+
+        this.CHAR_PIXEL = 10;
+        this.CHARS = [
+            '111101101101111',
+            '010010010010010',
+            '111001111100111',
+            '111001111001111',
+            '101101111001001',
+            '111100111001111',
+            '111100111101111',
+            '111001001001001',
+            '111101111101111',
+            '111101111001111',
+        ].map(str => {
+            const canvas = document.createElement('canvas');
+            const s = this.CHAR_PIXEL;
+            canvas.height = s * 5;
+            canvas.width = s * 3;
+            const context = canvas.getContext('2d');
+            context.fillStyle = '#fff';
+            str.split('').forEach((fill, i) => {
+                if (fill === '1') {
+                    context.fillRect((i % 3) * s, (i / 3 | 0) * s, s, s);
+                }
+            });
+            return canvas;
+        });
      }
+
+
+     
 
     update(dt) {
         this.ball.pos.x += this.ball.vel.x * dt;
@@ -101,6 +131,7 @@ class Pong {
     
         this.drawRect(this.ball);
         this.players.forEach(player => this.drawRect(player));
+        this.drawScore();
     
     }
 
@@ -148,11 +179,10 @@ class Pong {
     }
 
     positionCheck(player, velocity) {
-        console.log(player);
-        if (player.bottom >= 400 && velocity >= 0 || player.top <= 0 && velocity <= 0) {
+        if (player.bottom >= this._canvas.height && velocity >= 0 || player.top <= 0 && velocity <= 0) {
             return;
         }
-        if (player.bottom >= 400 && velocity == 3 || player.top <= 0 && velocity == -3) {
+        if (player.bottom >= this._canvas.height && velocity == 3 || player.top <= 0 && velocity == -3) {
             return;
         }
         player.pos.y += velocity;
@@ -170,18 +200,34 @@ class Pong {
     }
 
     aiLogic() {
-        if (this.players[1].bottom - this.ball.bottom < 50 && this.players[1].bottom - this.ball.bottom > 0) {
+        if (this.players[1].bottom - this.ball.bottom < 70 && this.players[1].bottom - this.ball.bottom > 0) {
+            this.players[1].vel.y = 1.5;
+        } else if (this.players[1].bottom < this.ball.bottom) {
             this.players[1].vel.y = 1.5;
         } else {
             this.players[1].vel.y = -1.5;
         }
     }
+    drawScore()
+    {
+        const align = this._canvas.width / 3;
+        const cw = this.CHAR_PIXEL * 4;
+        this.players.forEach((player, index) => {
+            const chars = player.score.toString().split('');
+            const offset = align * (index + 1) - (cw * chars.length / 2) + this.CHAR_PIXEL / 2;
+            chars.forEach((char, pos) => {
+                this._context.drawImage(this.CHARS[char|0], offset + pos * cw, 20);
+            });
+        });
+    }
+    
 }   
 
 
 
 const canvas = document.getElementById('pong');
 const pong = new Pong(canvas);
+
 
 
 // Pulled off of stack overflow to track keypresses, very useful :)
