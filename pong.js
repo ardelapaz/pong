@@ -44,7 +44,7 @@ class Pong {
     constructor(canvas) {
         this._canvas = canvas;
         this._context = canvas.getContext('2d');
-
+        
         this.ball = new Ball();
 
         this.players = [
@@ -60,9 +60,9 @@ class Pong {
                 this.update((millis - lastTime) / 1000);
             }
             lastTime = millis;
-            requestAnimationFrame(this.callback);
+                this.requestId = requestAnimationFrame(this.callback);
         };
-        requestAnimationFrame(this.callback);
+        this.requestId = requestAnimationFrame(this.callback);
       }
 
 
@@ -84,7 +84,7 @@ class Pong {
             this.collide(player, this.ball);
         });
 
-        if (this.players[1].score == 1) {
+        if (this.players[0].score >= 11 || this.players[1].score >= 11) {
             this.endGame();
         } else {
         this.render();
@@ -123,17 +123,11 @@ class Pong {
     hasScored() {
         if (this.ball.right > this._canvas.width) {
             this.players[0].score = this.players[0].score + 1;
-            if (this.players[0].score == 1) {
-                this.endGame();
-            }
             this.reset();
             this.play(1);
         }
         if (this.ball.left < 0) {
             this.players[1].score = this.players[1].score + 1;
-            if (this.players[0].score == 1) {
-                this.endGame();
-            }
             this.reset();
             this.play(-1);
         }
@@ -205,11 +199,21 @@ class Pong {
     }
 
     endGame() {
-        console.log('test');
-        window.stop();
+        this.clear();
+        this.ball.vel.x = 0;
+        this.ball.vel.y = 0;
+        window.cancelAnimationFrame(this.requestId);
         this._context.font = "30px Arial";
         this._context.fillStyle = "#FFFFFF";
-        this._context.fillText("Game Over! \n Refresh to play again!", 300, 300);
+        this._context.fillText("Game Over!", 325, 200);
+        this._context.fillText("Your Score: " + this.players[0].score, 322, 275);
+        this._context.fillText("Click anywhere to play again!", 225, 350);
+    }
+
+    clear()
+    {
+        this._context.fillStyle = '#000';
+        this._context.fillRect(0, 0, this._canvas.width, this._canvas.height);
     }
     
 }   
@@ -230,3 +234,7 @@ window.addEventListener('keydown',function(e){
 window.addEventListener('keyup',function(e){
     keyState[e.keyCode || e.which] = false;
 },true);
+
+window.addEventListener('click', function(e) {
+    location.reload();
+})
